@@ -118,7 +118,7 @@ class IntentMiddleware(BaseMiddleware):
                 raise InvalidIntentIdError("Intents list is empty")
 
             if stack.last_intent_id() != intent_id:
-                raise OutdatedIntentError(f"Outdated intent id (%s) for stack ('%s')",
+                raise OutdatedIntentError("Outdated intent id (%s) for stack ('%s')",
                                           intent_id, stack.id)
 
             event.data = callback_data
