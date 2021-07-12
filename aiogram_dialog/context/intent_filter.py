@@ -12,7 +12,7 @@ from aiogram.types.base import TelegramObject
 from .context import Context
 from .events import DialogUpdateEvent
 from .storage import StorageProxy
-from ..exceptions import InvalidStackIdError
+from ..exceptions import InvalidStackIdError, InvalidIntentIdError, OutdatedIntentError
 from ..utils import remove_indent_id
 
 STORAGE_KEY = "aiogd_storage_proxy"
@@ -110,10 +110,17 @@ class IntentMiddleware(BaseMiddleware):
         intent_id, callback_data = remove_indent_id(event.data)
         if intent_id:
             context = await proxy.load_context(intent_id)
-            stack = await proxy.load_stack(context.stack_id)
+            stack = await proxy.load_stack()
+
+            try:
+                last_intent_id = stack.last_intent_id()
+            except IndexError as e:
+                raise InvalidIntentIdError("Intents list is empty")
+
             if stack.last_intent_id() != intent_id:
-                logger.warning(f"Outdated intent id ({intent_id}) for stack ({stack.id})")
-                raise CancelHandler()
+                raise OutdatedIntentError(f"Outdated intent id (%s) for stack ('%s')",
+                                          intent_id, stack.id)
+
             event.data = callback_data
         else:
             context = None
