@@ -1,5 +1,8 @@
 from abc import ABC
 import locale
+
+from aiogram.utils import emoji
+
 locale.setlocale(locale.LC_ALL, 'ru_RU')
 from calendar import monthcalendar
 from datetime import date, datetime
@@ -156,11 +159,11 @@ class Calendar(Keyboard, ABC):
             weekheader,
             *days,
             [
-                InlineKeyboardButton(text="<<  ",
+                InlineKeyboardButton(text=emoji.emojize(':left_arrow:'),
                                      callback_data=f"{self.widget_id}:{MONTH_PREV}"),
-                InlineKeyboardButton(text=">> <<",
+                InlineKeyboardButton(text=emoji.emojize(':magnifying_glass_tilted_left:'),
                                      callback_data=f"{self.widget_id}:{SCOPE_MONTHS}"),
-                InlineKeyboardButton(text="  >>",
+                InlineKeyboardButton(text=emoji.emojize(':right_arrow:'),
                                      callback_data=f"{self.widget_id}:{MONTH_NEXT}"),
             ],
         ]
