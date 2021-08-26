@@ -120,7 +120,7 @@ class Calendar(Keyboard, ABC):
         for n in MONTHS_NUMBERS:
             season = []
             for month in n:
-                month_text = date(offset.year, month, 1).strftime("%B")
+                month_text = date(offset.year, month, 1).strftime("%b")
                 season.append(InlineKeyboardButton(text=month_text,
                                                    callback_data=f"{self.widget_id}:{PREFIX_MONTH}{month}"))
             months.append(season)
@@ -133,7 +133,7 @@ class Calendar(Keyboard, ABC):
         ]
 
     def days_kbd(self, offset) -> List[List[InlineKeyboardButton]]:
-        header_week = offset.strftime("%B %Y")
+        header_week = offset.strftime("%b %Y")
         weekheader = [InlineKeyboardButton(text=dayname, callback_data=" ")
                       for dayname in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]]
         days = []
