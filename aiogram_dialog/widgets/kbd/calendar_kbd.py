@@ -1,4 +1,6 @@
 from abc import ABC
+import locale
+locale.setlocale(locale.LC_ALL, 'ru_RU')
 from calendar import monthcalendar
 from datetime import date, datetime
 from time import mktime
@@ -113,7 +115,7 @@ class Calendar(Keyboard, ABC):
         return years
 
     def months_kbd(self, offset) -> List[List[InlineKeyboardButton]]:
-        header_year = offset.strftime("year %Y")
+        header_year = offset.strftime("%Y")
         months = []
         for n in MONTHS_NUMBERS:
             season = []
@@ -154,11 +156,11 @@ class Calendar(Keyboard, ABC):
             weekheader,
             *days,
             [
-                InlineKeyboardButton(text="Пред. месяц",
+                InlineKeyboardButton(text="<<  ",
                                      callback_data=f"{self.widget_id}:{MONTH_PREV}"),
                 InlineKeyboardButton(text=">> <<",
                                      callback_data=f"{self.widget_id}:{SCOPE_MONTHS}"),
-                InlineKeyboardButton(text="След. месяц",
+                InlineKeyboardButton(text="  >>",
                                      callback_data=f"{self.widget_id}:{MONTH_NEXT}"),
             ],
         ]
