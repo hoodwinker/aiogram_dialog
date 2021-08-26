@@ -133,7 +133,7 @@ class Calendar(Keyboard, ABC):
     def days_kbd(self, offset) -> List[List[InlineKeyboardButton]]:
         header_week = offset.strftime("%B %Y")
         weekheader = [InlineKeyboardButton(text=dayname, callback_data=" ")
-                      for dayname in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]]
+                      for dayname in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]]
         days = []
         for week in monthcalendar(offset.year, offset.month):
             week_row = []
@@ -154,11 +154,11 @@ class Calendar(Keyboard, ABC):
             weekheader,
             *days,
             [
-                InlineKeyboardButton(text="Prev month",
+                InlineKeyboardButton(text="Пред. месяц",
                                      callback_data=f"{self.widget_id}:{MONTH_PREV}"),
-                InlineKeyboardButton(text="Zoom out",
+                InlineKeyboardButton(text=">> <<",
                                      callback_data=f"{self.widget_id}:{SCOPE_MONTHS}"),
-                InlineKeyboardButton(text="Next month",
+                InlineKeyboardButton(text="След. месяц",
                                      callback_data=f"{self.widget_id}:{MONTH_NEXT}"),
             ],
         ]
