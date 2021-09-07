@@ -5,7 +5,7 @@ from aiogram.utils import emoji
 
 locale.setlocale(locale.LC_ALL, 'ru_RU')
 from calendar import monthcalendar
-from datetime import date, datetime
+from datetime import date
 from time import mktime
 from typing import List, Callable, Union, Awaitable, TypedDict
 
@@ -33,6 +33,7 @@ PREFIX_MONTH = "MONTH"
 PREFIX_YEAR = "YEAR"
 
 MONTHS_NUMBERS = [(1, 2, 3), (4, 5, 6), (7, 8, 9), (10, 11, 12)]
+DAYNAMES = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 
 
 class CalendarData(TypedDict):
@@ -138,7 +139,7 @@ class Calendar(Keyboard, ABC):
     def days_kbd(self, offset) -> List[List[InlineKeyboardButton]]:
         header_week = offset.strftime("%b %Y")
         weekheader = [InlineKeyboardButton(text=dayname, callback_data=" ")
-                      for dayname in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]]
+                      for dayname in DAYNAMES]
         days = []
         for week in monthcalendar(offset.year, offset.month):
             week_row = []
