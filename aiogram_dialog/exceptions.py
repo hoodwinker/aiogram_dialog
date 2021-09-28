@@ -7,6 +7,14 @@ class InvalidStackIdError(DialogsError):
     pass
 
 
+class InvalidIntentIdError(DialogsError):
+    pass
+
+
+class OutdatedIntentError(DialogsError):
+    pass
+
+
 class UnknownIntent(DialogsError):
     pass
 
