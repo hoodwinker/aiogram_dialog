@@ -120,7 +120,7 @@ class IntentMiddleware(BaseMiddleware):
             except IndexError as e:
                 raise InvalidIntentIdError("Intents list is empty")
 
-            if stack.last_intent_id() != intent_id:
+            if last_intent_id != intent_id:
                 raise OutdatedIntentError("Outdated intent id (%s) for stack ('%s')",
                                           intent_id, stack.id)
 
