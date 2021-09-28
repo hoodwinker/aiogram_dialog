@@ -6,7 +6,7 @@ Predicate = Callable[[Dict, "Whenable", DialogManager], bool]
 WhenCondition = Union[str, Predicate, None]
 
 
-__all__ = ['WhenCondition', 'when_not']
+__all__ = ['Whenable', 'WhenCondition', 'when_not']
 
 
 def new_when_field(fieldname: str) -> Predicate:
