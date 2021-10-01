@@ -5,7 +5,7 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram_dialog import Window, DialogManager
 from aiogram_dialog.widgets.kbd import Button, Row, Group
 from aiogram_dialog.widgets.text import Const, Format, Multi
-from aiogram_dialog.widgets.when import Whenable
+from aiogram_dialog.widgets.when import Whenable, when_not
 
 
 class MySG(StatesGroup):
@@ -36,6 +36,7 @@ window = Window(
             when="extended",
         ),
         Button(Const("Admin mode"), id="nothing", when=is_tishka17),
+        Button(Const("User mode"), id="nothing", when=when_not(is_tishka17)),
     ),
     state=MySG.main,
     getter=get_data,
