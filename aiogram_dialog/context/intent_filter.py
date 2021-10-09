@@ -110,7 +110,7 @@ class IntentMiddleware(BaseMiddleware):
         intent_id, callback_data = remove_indent_id(event.data)
         if intent_id:
             context = await proxy.load_context(intent_id)
-            stack = await proxy.load_stack()
+            stack = await proxy.load_stack(context.stack_id)
 
             try:
                 last_intent_id = stack.last_intent_id()
