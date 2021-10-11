@@ -49,7 +49,7 @@ class IntentMiddleware(BaseMiddleware):
         chat = get_chat(event)
         proxy = StorageProxy(
             storage=self.storage,
-            user_id=event.from_user.id,
+            user_id=chat.id,
             chat_id=chat.id,
             state_groups=self.state_groups,
         )
@@ -71,7 +71,7 @@ class IntentMiddleware(BaseMiddleware):
         chat = get_chat(event)
         proxy = StorageProxy(
             storage=self.storage,
-            user_id=event.from_user.id,
+            user_id=chat.id,
             chat_id=chat.id,
             state_groups=self.state_groups,
         )
@@ -103,7 +103,7 @@ class IntentMiddleware(BaseMiddleware):
         chat = get_chat(event)
         proxy = StorageProxy(
             storage=self.storage,
-            user_id=event.from_user.id,
+            user_id=chat.id,
             chat_id=chat.id,
             state_groups=self.state_groups,
         )
