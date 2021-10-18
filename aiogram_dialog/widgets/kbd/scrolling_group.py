@@ -24,7 +24,7 @@ class ScrollingGroup(Group):
         kbd = await super()._render_keyboard(data, manager)
         pages = len(kbd) // self.height + bool(len(kbd) % self.height)
         last_page = pages - 1
-        if pages == 0:
+        if pages <= 1:
             return kbd
         current_page = min(last_page, self.get_page(manager))
         next_page = min(last_page, current_page + 1)
