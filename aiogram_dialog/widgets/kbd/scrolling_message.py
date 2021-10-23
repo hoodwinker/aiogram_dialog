@@ -105,7 +105,7 @@ class ScrollingMessage(Keyboard, Text):
                 yield last_pos, max_len + last_pos
                 last_pos = max_len + last_pos
 
-                splitters = (splitters[i] - max_len for i, _ in enumerate(splitters))
+                splitters = (splitter - max_len for splitter in splitters)
                 splitters = list(filter(lambda x: x <= 0, splitters))
 
             if last_pos == len(text):
