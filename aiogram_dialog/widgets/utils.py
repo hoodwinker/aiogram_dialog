@@ -49,13 +49,18 @@ def ensure_widgets(
     inputs = []
 
     for w in widgets:
+        ensured = None
         if isinstance(w, (str, Text)):
             texts.append(ensure_text(w))
-        elif isinstance(w, Keyboard):
+            ensured = True
+        if isinstance(w, Keyboard):
             keyboards.append(ensure_keyboard(w))
-        elif isinstance(w, (BaseInput, Callable)):
+            ensured = True
+        if isinstance(w, (BaseInput, Callable)):
             inputs.append(ensure_input(w))
-        else:
+            ensured = True
+
+        if not ensured:
             raise InvalidWidgetType(
                 f"Cannot add widget of type {type(w)}. "
                 f"Only str, Text, Keyboard, BaseInput and Callable are supported"
