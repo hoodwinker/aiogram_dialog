@@ -10,16 +10,22 @@ from aiogram_dialog.widgets.text import Text
 from aiogram_dialog.widgets.when import WhenCondition
 
 
+TELEGRAM_MESSAGE_LENGTH_LIMIT = 4096
+
+
 class ScrollingMessage(Keyboard, Text):
     def __init__(self,
                  text_format: str,
                  id: str,
                  limit: int = None,
                  split_by=None,
-                 when: WhenCondition = None):
+                 when: WhenCondition = None,
+                 scrolling_button_names=('<', '>'),
+                 show_page_buttons=True):
         super().__init__(id=id, when=when)
+
         if not limit:
-            limit = 4096
+            limit = TELEGRAM_MESSAGE_LENGTH_LIMIT
         self.limit = limit
         self.split_by = split_by or '\n'
 
@@ -27,6 +33,8 @@ class ScrollingMessage(Keyboard, Text):
         if self.split_by in self.splitters:
             self.splitters.remove(self.split_by)
         self.splitters = [self.split_by, *self.splitters]
+        self.scrolling_button_names = scrolling_button_names
+        self.show_page_buttons = show_page_buttons
 
         self.text = text_format
 
@@ -52,14 +60,19 @@ class ScrollingMessage(Keyboard, Text):
         next_page = min(last_page, current_page + 1)
         prev_page = max(0, current_page - 1)
 
-        pager = [[
-            InlineKeyboardButton(text="1", callback_data=f"{self.widget_id}:0"),
-            InlineKeyboardButton(text="<", callback_data=f"{self.widget_id}:{prev_page}"),
-            InlineKeyboardButton(text=str(current_page + 1), callback_data=f"{self.widget_id}:{current_page}"),
-            InlineKeyboardButton(text=">", callback_data=f"{self.widget_id}:{next_page}"),
-            InlineKeyboardButton(text=str(last_page + 1), callback_data=f"{self.widget_id}:{last_page}"),
-        ]]
-        return pager
+        pager = [
+            InlineKeyboardButton(text="1",
+                                 callback_data=f"{self.widget_id}:0") if self.show_page_buttons else None,
+            InlineKeyboardButton(text=self.scrolling_button_names[0],
+                                 callback_data=f"{self.widget_id}:{prev_page}"),
+            InlineKeyboardButton(text=str(current_page + 1),
+                                 callback_data=f"{self.widget_id}:{current_page}") if self.show_page_buttons else None,
+            InlineKeyboardButton(text=self.scrolling_button_names[1],
+                                 callback_data=f"{self.widget_id}:{next_page}"),
+            InlineKeyboardButton(text=str(last_page + 1),
+                                 callback_data=f"{self.widget_id}:{last_page}") if self.show_page_buttons else None,
+        ]
+        return [[kb for kb in pager if kb]]
 
     async def process_callback(self, c: CallbackQuery, dialog: Dialog, manager: DialogManager) -> bool:
         prefix = f"{self.widget_id}:"
