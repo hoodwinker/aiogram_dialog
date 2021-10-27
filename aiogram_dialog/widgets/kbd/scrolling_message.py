@@ -53,7 +53,7 @@ class ScrollingMessage(Keyboard, Text):
         text = self.text.format_map(data)
         pages = self.get_pages(text, manager)
         last_page = len(pages) - 1
-        if last_page <= 1:
+        if last_page <= 0:
             return []
 
         current_page = min(last_page, self.get_page(manager))
@@ -63,12 +63,16 @@ class ScrollingMessage(Keyboard, Text):
         pager = [
             InlineKeyboardButton(text="1",
                                  callback_data=f"{self.widget_id}:0") if self.show_page_buttons else None,
+
             InlineKeyboardButton(text=self.scrolling_button_names[0],
-                                 callback_data=f"{self.widget_id}:{prev_page}"),
+                                 callback_data=f"{self.widget_id}:{prev_page}") if current_page != 0 else None,
+
             InlineKeyboardButton(text=str(current_page + 1),
                                  callback_data=f"{self.widget_id}:{current_page}") if self.show_page_buttons else None,
+
             InlineKeyboardButton(text=self.scrolling_button_names[1],
-                                 callback_data=f"{self.widget_id}:{next_page}"),
+                                 callback_data=f"{self.widget_id}:{next_page}") if last_page != current_page else None,
+
             InlineKeyboardButton(text=str(last_page + 1),
                                  callback_data=f"{self.widget_id}:{last_page}") if self.show_page_buttons else None,
         ]
