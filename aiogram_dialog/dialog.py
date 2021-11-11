@@ -9,7 +9,7 @@ from aiogram.types import InlineKeyboardMarkup, Message, CallbackQuery, ContentT
 from .context.events import Data
 from .context.media_storage import MediaIdStorage
 from .manager.protocols import DialogRegistryProto, ManagedDialogProto, DialogManager
-from .utils import NewMessage, show_message, add_indent_id, get_chat, remove_message, remove_kbd, get_media_id
+from .utils import NewMessage, show_message, add_indent_id, get_chat, remove_message, remove_kbd, get_media_id, media_storage
 from .widgets.action import Actionable
 
 logger = getLogger(__name__)
@@ -125,6 +125,10 @@ class Dialog(ManagedDialogProto):
         message = await self._show(new_message, manager)
         manager.current_stack().last_message_id = message.message_id
         manager.current_stack().last_media_id = get_media_id(message)
+        if new_message.media and new_message.media.path:
+            await media_storage.save_media_id(new_message.media.path,
+                                        new_message.media.type,
+                                        get_media_id(message))
         window.message_id = message.message_id
 
     async def _show(self, new_message: NewMessage, manager: DialogManager):
