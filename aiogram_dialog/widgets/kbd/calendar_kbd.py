@@ -49,9 +49,9 @@ class Calendar(Keyboard, ABC):
         self.locale = locale
         self.on_click = ensure_event_processor(on_click)
 
-    async def render_keyboard(self,
-                              data,
-                              manager: DialogManager) -> List[List[InlineKeyboardButton]]:
+    async def _render_keyboard(self,
+                               data,
+                               manager: DialogManager) -> List[List[InlineKeyboardButton]]:
         offset = self.get_offset(manager)
         current_scope = self.get_scope(manager)
 
@@ -124,7 +124,7 @@ class Calendar(Keyboard, ABC):
         for n in MONTHS_NUMBERS:
             season = []
             for month in n:
-                month_text = format_date( date(offset.year, month, 1), "MMM Y", locale=self.locale)
+                month_text = format_date(date(offset.year, month, 1), "MMM Y", locale=self.locale)
                 season.append(InlineKeyboardButton(text=month_text,
                                                    callback_data=f"{self.widget_id}:{PREFIX_MONTH}{month}"))
             months.append(season)
@@ -138,7 +138,7 @@ class Calendar(Keyboard, ABC):
 
     def days_kbd(self, offset) -> List[List[InlineKeyboardButton]]:
         header_week = format_date(offset, "MMM Y", locale=self.locale)
-        day_names = (format_date(PIVOT_MONDAY+timedelta(x), "E", locale=self.locale) for x in range(7))
+        day_names = (format_date(PIVOT_MONDAY + timedelta(x), "E", locale=self.locale) for x in range(7))
         weekheader = [InlineKeyboardButton(text=day_name, callback_data=" ")
                       for day_name in day_names]
         days = []
