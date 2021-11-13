@@ -4,6 +4,7 @@ from .calendar_kbd import Calendar
 from .checkbox import Checkbox
 from .group import Group, Row, Column
 from .scrolling_group import ScrollingGroup
+from .scrolling_message import ScrollingMessage
 from .select import Select, Radio, Multiselect
 from .state import Back, Cancel, Next, Start, SwitchTo
 
@@ -14,6 +15,7 @@ __all__ = [
     "Back", "Cancel", "Next", "Start", "SwitchTo",
     "Group", "Row", "Column",
     "ScrollingGroup",
+    "ScrollingMessage",
     "Checkbox",
     "Select", "Radio", "Multiselect",
 ]
