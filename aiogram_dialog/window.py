@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import Dict, Optional, Union, List
+from typing import Dict, Optional, List
 
 from aiogram.dispatcher.filters.state import State
 from aiogram.types import InlineKeyboardMarkup, Message, CallbackQuery, ParseMode, ForceReply
@@ -8,19 +8,15 @@ from .dialog import Dialog, DialogWindowProto, DataGetter
 from .manager.protocols import DialogManager
 from .utils import get_chat, NewMessage, remove_message, MediaAttachment
 from .widgets.action import Actionable
-from .widgets.input import BaseInput, MessageHandlerFunc
 from .widgets.kbd import Keyboard
-from .widgets.media import Media
-from .widgets.text import Text
-from .widgets.utils import ensure_widgets
+from .widgets.utils import ensure_widgets, WidgetSrc
 
 logger = getLogger(__name__)
 
 
 class Window(DialogWindowProto):
-
     def __init__(self,
-                 *widgets: Union[str, Text, Keyboard, MessageHandlerFunc, BaseInput],
+                 *widgets: WidgetSrc,
                  state: State,
                  getter: DataGetter = None,
                  parse_mode: Optional[ParseMode] = None,
@@ -30,9 +26,10 @@ class Window(DialogWindowProto):
                  force_reply_placeholder: Optional[Union[str, bool]] = None,
                  remove_on_close: Optional[bool] = None,
                  input_removing: Optional[bool] = None,
-                 media: Optional[Media] = None,
                  ):
-        self.text, self.keyboard, self.on_message = ensure_widgets(widgets)
+        (
+            self.text, self.keyboard, self.on_message, self.media,
+        ) = ensure_widgets(widgets)
         self.getter = getter
         self.state = state
         self.parse_mode = parse_mode
@@ -43,7 +40,6 @@ class Window(DialogWindowProto):
         self._remove_on_close = remove_on_close
         self._input_removing = input_removing
         self._message_id = None
-        self.media = media
 
     async def render_text(self, data: Dict, manager: DialogManager) -> str:
         return await self.text.render_text(data, manager)
