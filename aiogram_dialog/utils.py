@@ -4,7 +4,8 @@ from typing import Optional, Tuple
 from aiogram import Bot
 from aiogram.types import Message, CallbackQuery, Chat, ParseMode, InlineKeyboardMarkup, \
     ChatMemberUpdated
-from aiogram.utils.exceptions import MessageNotModified, MessageCantBeEdited, MessageToEditNotFound
+from aiogram.utils.exceptions import MessageNotModified, MessageCantBeEdited, \
+    MessageToEditNotFound, MessageCantBeDeleted
 
 from .context.events import (
     DialogUpdateEvent, ChatEvent
@@ -41,6 +42,10 @@ def intent_callback_data(intent_id: str, callback_data: Optional[str]) -> Option
 def add_indent_id(message: NewMessage, intent_id: str):
     if not message.reply_markup:
         return
+
+    if not hasattr(message.reply_markup, "inline_keyboard"):
+        return
+
     for row in message.reply_markup.inline_keyboard:
         for button in row:
             button.callback_data = intent_callback_data(
@@ -84,6 +89,17 @@ async def remove_kbd(bot: Bot, old_message: Optional[Message]):
             )
         except (MessageNotModified, MessageCantBeEdited, MessageToEditNotFound):
             pass  # nothing to remove
+
+
+async def remove_message(bot: Bot, old_message: Optional[Message]):
+    if old_message:
+        try:
+            await bot.delete_message(
+                message_id=old_message.message_id, chat_id=old_message.chat.id
+            )
+            return None
+        except (MessageNotModified, MessageCantBeEdited, MessageToEditNotFound, MessageCantBeDeleted):
+            return old_message
 
 
 async def send_message(bot: Bot, new_message: NewMessage):

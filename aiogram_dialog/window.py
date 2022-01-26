@@ -2,7 +2,7 @@ from logging import getLogger
 from typing import Dict, Optional, Union, List
 
 from aiogram.dispatcher.filters.state import State
-from aiogram.types import InlineKeyboardMarkup, Message, CallbackQuery, ParseMode
+from aiogram.types import InlineKeyboardMarkup, Message, CallbackQuery, ParseMode, ForceReply
 
 from .dialog import Dialog, DialogWindowProto, DataGetter
 from .manager.protocols import DialogManager
@@ -26,6 +26,8 @@ class Window(DialogWindowProto):
                  disable_web_page_preview: Optional[bool] = None,
                  preview_add_transitions: Optional[List[Keyboard]] = None,
                  preview_data: Optional[Dict] = None,
+                 force_reply_placeholder: Optional[Union[str, bool]] = None,
+                 remove_on_close: Optional[bool] = None,
                  ):
         self.text, self.keyboard, self.on_message = ensure_widgets(widgets)
         self.getter = getter
@@ -34,6 +36,8 @@ class Window(DialogWindowProto):
         self.disable_web_page_preview = disable_web_page_preview
         self.preview_add_transitions = preview_add_transitions
         self.preview_data = preview_data
+        self.force_reply_placeholder = force_reply_placeholder
+        self._remove_on_close = remove_on_close
 
     async def render_text(self, data: Dict, manager: DialogManager) -> str:
         return await self.text.render_text(data, manager)
@@ -61,10 +65,22 @@ class Window(DialogWindowProto):
             current_data = self.preview_data
         else:
             current_data = await self.load_data(dialog, manager)
+
+        reply_markup = await self.render_kbd(current_data, manager)
+
+        if self.force_reply_placeholder is not None and self.force_reply_placeholder is not True:
+            if reply_markup.inline_keyboard:
+                raise RuntimeError("Cannot use force reply and keyboard simultaneously")
+            else:
+                if self.force_reply_placeholder is True:
+                    reply_markup = ForceReply()
+                else:
+                    reply_markup = ForceReply(input_field_placeholder=self.force_reply_placeholder)
+
         return NewMessage(
             chat=get_chat(manager.event),
             text=await self.render_text(current_data, manager),
-            reply_markup=await self.render_kbd(current_data, manager),
+            reply_markup=reply_markup,
             parse_mode=self.parse_mode,
             force_new=isinstance(manager.event, Message),
             disable_web_page_preview=self.disable_web_page_preview,
@@ -72,6 +88,10 @@ class Window(DialogWindowProto):
 
     def get_state(self) -> State:
         return self.state
+
+    @property
+    def remove_on_close(self):
+        return self._remove_on_close
 
     def find(self, widget_id) -> Optional[Actionable]:
         if self.keyboard:
