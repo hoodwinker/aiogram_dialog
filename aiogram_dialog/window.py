@@ -82,7 +82,7 @@ class Window(DialogWindowProto):
             text=await self.render_text(current_data, manager),
             reply_markup=reply_markup,
             parse_mode=self.parse_mode,
-            force_new=isinstance(manager.event, Message),
+            force_new=any((isinstance(manager.event, Message), self.force_reply_placeholder)),
             disable_web_page_preview=self.disable_web_page_preview,
         )
 
