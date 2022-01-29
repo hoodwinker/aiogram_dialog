@@ -5,7 +5,7 @@ from aiogram import Bot
 from aiogram.types import Message, CallbackQuery, Chat, ParseMode, InlineKeyboardMarkup, \
     ChatMemberUpdated
 from aiogram.utils.exceptions import MessageNotModified, MessageCantBeEdited, \
-    MessageToEditNotFound, MessageCantBeDeleted
+    MessageToEditNotFound, MessageCantBeDeleted, MessageIdentifierNotSpecified
 
 from .context.events import (
     DialogUpdateEvent, ChatEvent
@@ -98,7 +98,8 @@ async def remove_message(bot: Bot, old_message: Optional[Message]):
                 message_id=old_message.message_id, chat_id=old_message.chat.id
             )
             return None
-        except (MessageNotModified, MessageCantBeEdited, MessageToEditNotFound, MessageCantBeDeleted):
+        except (MessageNotModified, MessageCantBeEdited,
+                MessageToEditNotFound, MessageCantBeDeleted, MessageIdentifierNotSpecified):
             return old_message
 
 
