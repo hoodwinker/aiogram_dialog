@@ -97,11 +97,16 @@ class ManagerImpl(DialogManager):
                 await self.dialog().show(self)
         elif mode is StartMode.RESET_STACK:
             stack = self.current_stack()
-            _window = await self.dialog()._current_window(self)
-            if _window.remove_on_close:
-                old_message = Message(message_id=stack.last_message_id,
-                                      chat=get_chat(self.event))
-                await remove_message(self.event.bot, old_message)
+
+            try:
+                _window = await self.dialog()._current_window(self)
+            except RuntimeError:
+                pass
+            else:
+                if _window.remove_on_close:
+                    old_message = Message(message_id=stack.last_message_id,
+                                          chat=get_chat(self.event))
+                    await remove_message(self.event.bot, old_message)
 
             while not stack.empty():
                 await storage.remove_context(stack.pop())
