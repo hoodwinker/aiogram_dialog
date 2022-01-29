@@ -13,7 +13,7 @@ from ..context.intent_filter import CONTEXT_KEY, STORAGE_KEY, STACK_KEY
 from ..context.stack import Stack, DEFAULT_STACK_ID
 from ..context.storage import StorageProxy
 from ..exceptions import IncorrectBackgroundError
-from ..utils import get_chat, remove_kbd
+from ..utils import get_chat, remove_kbd, remove_message
 
 logger = getLogger(__name__)
 
@@ -97,6 +97,12 @@ class ManagerImpl(DialogManager):
                 await self.dialog().show(self)
         elif mode is StartMode.RESET_STACK:
             stack = self.current_stack()
+            _window = await self.dialog()._current_window(self)
+            if _window.remove_on_close:
+                old_message = Message(message_id=stack.last_message_id,
+                                      chat=get_chat(self.event))
+                await remove_message(self.event.bot, old_message)
+
             while not stack.empty():
                 await storage.remove_context(stack.pop())
             await self._remove_kbd()
