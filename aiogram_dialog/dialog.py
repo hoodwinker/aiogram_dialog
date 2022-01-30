@@ -153,6 +153,7 @@ class Dialog(ManagedDialogProto):
         window = await self._current_window(dialog_manager)
         await window.process_message(m, self, dialog_manager)
         if dialog_manager.current_context() == intent:  # no new dialog started
+            window._remove_on_close = False
             await self.show(dialog_manager)
 
     async def _callback_handler(self, c: CallbackQuery, dialog_manager: DialogManager):
@@ -160,6 +161,7 @@ class Dialog(ManagedDialogProto):
         window = await self._current_window(dialog_manager)
         await window.process_callback(c, self, dialog_manager)
         if dialog_manager.current_context() == intent:  # no new dialog started
+            window._remove_on_close = False
             await self.show(dialog_manager)
         await c.answer()
 
