@@ -141,10 +141,7 @@ class Dialog(ManagedDialogProto):
             else:
                 old_message = None
 
-        if old_message:
-            window_message = await manager.process_window_removing()
-            if window and window.message_id == old_message.message_id:
-                old_message = window_message
+        await manager.process_window_removing()
 
         return await show_message(event.bot, new_message, old_message)
 
