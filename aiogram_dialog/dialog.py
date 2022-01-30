@@ -150,14 +150,20 @@ class Dialog(ManagedDialogProto):
         window = await self._current_window(dialog_manager)
         await window.process_message(m, self, dialog_manager)
         if dialog_manager.current_context() == intent:  # no new dialog started
+            old_status = window._remove_on_close
+            window._remove_on_close = False
             await self.show(dialog_manager)
+            window._remove_on_close = old_status
 
     async def _callback_handler(self, c: CallbackQuery, dialog_manager: DialogManager):
         intent = dialog_manager.current_context()
         window = await self._current_window(dialog_manager)
         await window.process_callback(c, self, dialog_manager)
         if dialog_manager.current_context() == intent:  # no new dialog started
+            old_status = window._remove_on_close
+            window._remove_on_close = False
             await self.show(dialog_manager)
+            window._remove_on_close = old_status
         await c.answer()
 
     async def _update_handler(self, event: ChatEvent, dialog_manager: DialogManager):
