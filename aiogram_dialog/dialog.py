@@ -47,6 +47,14 @@ class DialogWindowProto(Protocol):
     def remove_on_close(self) -> Optional[bool]:
         raise NotImplementedError
 
+    @property
+    def message_id(self) -> Optional[int]:
+        raise NotImplementedError
+
+    @message_id.setter
+    def message_id(self, value):
+        raise NotImplementedError
+
     def find(self, widget_id) -> Optional[Actionable]:
         raise NotImplementedError
 
@@ -113,10 +121,11 @@ class Dialog(ManagedDialogProto):
         window = await self._current_window(manager)
         new_message = await window.render(self, manager)
         add_indent_id(new_message, manager.current_context().id)
-        message = await self._show(new_message, manager, window.remove_on_close)
+        message = await self._show(new_message, manager, window)
         manager.current_stack().last_message_id = message.message_id
+        window.message_id = message.message_id
 
-    async def _show(self, new_message: NewMessage, manager: DialogManager, remove_old_message=False):
+    async def _show(self, new_message: NewMessage, manager: DialogManager, window: DialogWindowProto):
         stack = manager.current_stack()
         event = manager.event
         if (
@@ -132,8 +141,9 @@ class Dialog(ManagedDialogProto):
             else:
                 old_message = None
 
-        if remove_old_message:
-            old_message = await remove_message(event.bot, old_message)
+        window_message = await manager.process_window_removing()
+        if window.message_id == old_message.message_id:
+            old_message = window_message
 
         return await show_message(event.bot, new_message, old_message)
 

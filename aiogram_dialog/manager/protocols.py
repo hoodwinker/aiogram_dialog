@@ -99,3 +99,6 @@ class DialogManager(BaseDialogManager):
 
     async def close_manager(self) -> None:
         pass
+
+    async def process_window_removing(self) -> None:
+        pass

@@ -66,6 +66,7 @@ class ManagerImpl(DialogManager):
         dialog = self.dialog()
         await dialog.process_result(old_context.start_data, result, self)
         if context.id == self.current_context().id:
+            await self.process_window_removing()
             await self.dialog().show(self)
 
     async def mark_closed(self) -> None:
@@ -98,15 +99,7 @@ class ManagerImpl(DialogManager):
         elif mode is StartMode.RESET_STACK:
             stack = self.current_stack()
 
-            try:
-                _window = await self.dialog()._current_window(self)
-            except RuntimeError:
-                pass
-            else:
-                if _window.remove_on_close:
-                    old_message = Message(message_id=stack.last_message_id,
-                                          chat=get_chat(self.event))
-                    await remove_message(self.event.bot, old_message)
+            await self.process_window_removing()
 
             while not stack.empty():
                 await storage.remove_context(stack.pop())
@@ -169,3 +162,16 @@ class ManagerImpl(DialogManager):
         del self.registry
         del self.event
         del self.data
+
+    async def process_window_removing(self):
+        try:
+            _window = await self.dialog()._current_window(self)
+        except RuntimeError:
+            return
+
+        if not all((_window.remove_on_close, _window.message_id)):
+            return
+
+        window_message = Message(message_id=_window.message_id,
+                                 chat=get_chat(self.event))
+        return await remove_message(self.event.bot, window_message)

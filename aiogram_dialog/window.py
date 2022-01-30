@@ -38,6 +38,7 @@ class Window(DialogWindowProto):
         self.preview_data = preview_data
         self.force_reply_placeholder = force_reply_placeholder
         self._remove_on_close = remove_on_close
+        self._message_id = None
 
     async def render_text(self, data: Dict, manager: DialogManager) -> str:
         return await self.text.render_text(data, manager)
@@ -92,6 +93,14 @@ class Window(DialogWindowProto):
     @property
     def remove_on_close(self):
         return self._remove_on_close
+
+    @property
+    def message_id(self) -> Optional[int]:
+        return self._message_id
+
+    @message_id.setter
+    def message_id(self, value):
+        self._message_id = value
 
     def find(self, widget_id) -> Optional[Actionable]:
         if self.keyboard:
