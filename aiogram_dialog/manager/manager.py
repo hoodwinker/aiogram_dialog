@@ -58,6 +58,7 @@ class ManagerImpl(DialogManager):
     async def done(self, result: Any = None) -> None:
         await self.dialog().process_close(result, self)
         old_context = self.current_context()
+        await self.process_window_removing()
         await self.mark_closed()
         context = self.current_context()
         if not context:
@@ -66,7 +67,6 @@ class ManagerImpl(DialogManager):
         dialog = self.dialog()
         await dialog.process_result(old_context.start_data, result, self)
         if context.id == self.current_context().id:
-            await self.process_window_removing()
             await self.dialog().show(self)
 
     async def mark_closed(self) -> None:
