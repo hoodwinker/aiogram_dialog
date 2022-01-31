@@ -91,16 +91,16 @@ async def remove_kbd(bot: Bot, old_message: Optional[Message]):
             pass  # nothing to remove
 
 
-async def remove_message(bot: Bot, old_message: Optional[Message]):
-    if old_message:
+async def remove_message(bot: Bot, message: Optional[Message]):
+    if message:
         try:
             await bot.delete_message(
-                message_id=old_message.message_id, chat_id=old_message.chat.id
+                message_id=message.message_id, chat_id=message.chat.id
             )
             return None
         except (MessageNotModified, MessageCantBeEdited, MessageToDeleteNotFound,
                 MessageToEditNotFound, MessageCantBeDeleted, MessageIdentifierNotSpecified):
-            return old_message
+            return message
 
 
 async def send_message(bot: Bot, new_message: NewMessage):

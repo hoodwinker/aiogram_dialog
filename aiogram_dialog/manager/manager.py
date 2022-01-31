@@ -52,13 +52,13 @@ class ManagerImpl(DialogManager):
     async def _remove_kbd(self) -> None:
         chat = get_chat(self.event)
         message = Message(chat=chat, message_id=self.current_stack().last_message_id)
+        await self.process_window_removing()
         await remove_kbd(self.event.bot, message)
         self.current_stack().last_message_id = None
 
     async def done(self, result: Any = None) -> None:
         await self.dialog().process_close(result, self)
         old_context = self.current_context()
-        await self.process_window_removing()
         await self.mark_closed()
         context = self.current_context()
         if not context:
@@ -98,12 +98,9 @@ class ManagerImpl(DialogManager):
                 await self.dialog().show(self)
         elif mode is StartMode.RESET_STACK:
             stack = self.current_stack()
-
-            await self.process_window_removing()
-
+            await self._remove_kbd()
             while not stack.empty():
                 await storage.remove_context(stack.pop())
-            await self._remove_kbd()
             return await self.start(state, data, StartMode.NORMAL)
         elif mode is StartMode.NEW_STACK:
             stack = Stack()

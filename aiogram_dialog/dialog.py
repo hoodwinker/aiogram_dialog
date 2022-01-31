@@ -8,7 +8,7 @@ from aiogram.types import InlineKeyboardMarkup, Message, CallbackQuery, ContentT
 
 from .context.events import Data
 from .manager.protocols import DialogRegistryProto, ManagedDialogProto, DialogManager
-from .utils import NewMessage, show_message, add_indent_id, get_chat, remove_message
+from .utils import NewMessage, show_message, add_indent_id, get_chat, remove_message, remove_kbd
 from .widgets.action import Actionable
 
 logger = getLogger(__name__)
@@ -121,11 +121,11 @@ class Dialog(ManagedDialogProto):
         window = await self._current_window(manager)
         new_message = await window.render(self, manager)
         add_indent_id(new_message, manager.current_context().id)
-        message = await self._show(new_message, manager, window)
+        message = await self._show(new_message, manager)
         manager.current_stack().last_message_id = message.message_id
         window.message_id = message.message_id
 
-    async def _show(self, new_message: NewMessage, manager: DialogManager, window: DialogWindowProto):
+    async def _show(self, new_message: NewMessage, manager: DialogManager):
         stack = manager.current_stack()
         event = manager.event
         if (
@@ -141,8 +141,8 @@ class Dialog(ManagedDialogProto):
             else:
                 old_message = None
 
-        await manager.process_window_removing()
-
+        if not old_message or new_message.force_new:
+            await manager.process_window_removing()
         return await show_message(event.bot, new_message, old_message)
 
     async def _message_handler(self, m: Message, dialog_manager: DialogManager):
@@ -150,20 +150,14 @@ class Dialog(ManagedDialogProto):
         window = await self._current_window(dialog_manager)
         await window.process_message(m, self, dialog_manager)
         if dialog_manager.current_context() == intent:  # no new dialog started
-            old_status = window._remove_on_close
-            window._remove_on_close = False
             await self.show(dialog_manager)
-            window._remove_on_close = old_status
 
     async def _callback_handler(self, c: CallbackQuery, dialog_manager: DialogManager):
         intent = dialog_manager.current_context()
         window = await self._current_window(dialog_manager)
         await window.process_callback(c, self, dialog_manager)
         if dialog_manager.current_context() == intent:  # no new dialog started
-            old_status = window._remove_on_close
-            window._remove_on_close = False
             await self.show(dialog_manager)
-            window._remove_on_close = old_status
         await c.answer()
 
     async def _update_handler(self, event: ChatEvent, dialog_manager: DialogManager):
