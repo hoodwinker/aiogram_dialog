@@ -6,7 +6,7 @@ from aiogram.types import InlineKeyboardMarkup, Message, CallbackQuery, ParseMod
 
 from .dialog import Dialog, DialogWindowProto, DataGetter
 from .manager.protocols import DialogManager
-from .utils import get_chat, NewMessage
+from .utils import get_chat, NewMessage, remove_message
 from .widgets.action import Actionable
 from .widgets.input import BaseInput, MessageHandlerFunc
 from .widgets.kbd import Keyboard
@@ -28,6 +28,7 @@ class Window(DialogWindowProto):
                  preview_data: Optional[Dict] = None,
                  force_reply_placeholder: Optional[Union[str, bool]] = None,
                  remove_on_close: Optional[bool] = None,
+                 input_removing: Optional[bool] = None,
                  ):
         self.text, self.keyboard, self.on_message = ensure_widgets(widgets)
         self.getter = getter
@@ -38,6 +39,7 @@ class Window(DialogWindowProto):
         self.preview_data = preview_data
         self.force_reply_placeholder = force_reply_placeholder
         self._remove_on_close = remove_on_close
+        self._input_removing = input_removing
         self._message_id = None
 
     async def render_text(self, data: Dict, manager: DialogManager) -> str:
@@ -55,6 +57,8 @@ class Window(DialogWindowProto):
     async def process_message(self, message: Message, dialog: Dialog, manager: DialogManager):
         if self.on_message:
             await self.on_message.process_message(message, dialog, manager)
+        if self._input_removing:
+            await remove_message(manager.event.bot, message)
 
     async def process_callback(self, c: CallbackQuery, dialog: Dialog, manager: DialogManager):
         if self.keyboard:
@@ -78,12 +82,17 @@ class Window(DialogWindowProto):
                 else:
                     reply_markup = ForceReply(input_field_placeholder=self.force_reply_placeholder)
 
+        force_new = any((
+            all((isinstance(manager.event, Message), not self._input_removing)),
+            self.force_reply_placeholder
+        ))
+
         return NewMessage(
             chat=get_chat(manager.event),
             text=await self.render_text(current_data, manager),
             reply_markup=reply_markup,
             parse_mode=self.parse_mode,
-            force_new=any((isinstance(manager.event, Message), self.force_reply_placeholder)),
+            force_new=force_new,
             disable_web_page_preview=self.disable_web_page_preview,
         )
 
