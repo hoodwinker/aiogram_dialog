@@ -23,6 +23,7 @@ class ManagerMiddleware(BaseMiddleware):
     on_pre_process_callback_query = on_pre_process_message
     on_pre_process_aiogd_update = on_pre_process_message
     on_pre_process_my_chat_member = on_pre_process_message
+    on_pre_process_edited_message = on_pre_process_message
 
     async def on_post_process_message(self, _, result, data: dict):
         manager: DialogManager = data.pop("dialog_manager")
@@ -31,3 +32,4 @@ class ManagerMiddleware(BaseMiddleware):
     on_post_process_callback_query = on_post_process_message
     on_post_process_aiogd_update = on_post_process_message
     on_post_process_my_chat_member = on_post_process_message
+    on_post_process_edited_message = on_post_process_message
