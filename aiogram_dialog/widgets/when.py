@@ -5,7 +5,6 @@ from magic_filter import MagicFilter
 from .managed import ManagedWidget
 from ..manager.protocols import DialogManager
 
-
 Predicate = Callable[[Dict, "Whenable", DialogManager], bool]
 WhenCondition = Union[str, MagicFilter, Predicate, None]
 
@@ -30,11 +29,13 @@ def new_when_magic(f: MagicFilter) -> Predicate:
 def true(data: Dict, widget: "Whenable", manager: DialogManager):
     return True
 
+
 def when_not(fieldname: str) -> Predicate:
     def _when_not(data: Dict, widget: "Whenable", manager: DialogManager) -> bool:
         return not bool(data.get(fieldname))
 
     return _when_not
+
 
 def when_all(fields: Sequence[WhenCondition]) -> Predicate:
     def check_field(when_field: WhenCondition, data, widget, manager):

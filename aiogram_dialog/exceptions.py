@@ -11,17 +11,14 @@ class InvalidIntentIdError(DialogsError):
     pass
 
 
-class OutdatedIntentError(DialogsError):
-    pass
-
-
 class UnknownIntent(DialogsError):
     pass
 
 
 class OutdatedIntent(DialogsError):
-    def __init__(self, stack_id, text):
+    def __init__(self, intent_id, stack_id, text):
         super().__init__(text)
+        self.intent_id = intent_id
         self.stack_id = stack_id
 
 

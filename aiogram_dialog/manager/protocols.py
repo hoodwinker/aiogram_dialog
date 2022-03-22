@@ -157,6 +157,7 @@ class NewMessage:
     parse_mode: Optional[ParseMode] = None
     show_mode: ShowMode = ShowMode.AUTO
     disable_web_page_preview: Optional[bool] = None
+    force_new: Optional[bool] = None
     media: Optional[MediaAttachment] = None
 
 
@@ -235,10 +236,10 @@ class DialogManager(BaseDialogManager):
     async def reset_stack(self, remove_keyboard: bool = True) -> None:
         raise NotImplementedError
 
+    async def process_window_removing(self) -> None:
+        raise NotImplementedError
+
 
 class ManagedWidgetProto(Protocol):
     def managed(self, manager: DialogManager) -> Any:
-        pass
-
-    async def process_window_removing(self) -> None:
         pass

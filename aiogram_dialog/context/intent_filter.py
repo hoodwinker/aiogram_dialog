@@ -12,7 +12,7 @@ from aiogram.types.base import TelegramObject
 from .context import Context
 from .events import DialogUpdateEvent
 from .storage import StorageProxy
-from ..exceptions import InvalidStackIdError, OutdatedIntent, InvalidIntentIdError, OutdatedIntentError
+from ..exceptions import InvalidStackIdError, OutdatedIntent, InvalidIntentIdError
 from ..utils import remove_indent_id, get_chat
 
 STORAGE_KEY = "aiogd_storage_proxy"
@@ -89,6 +89,7 @@ class IntentMiddleware(BaseMiddleware):
             if stack.empty():
                 if event.intent_id is not None:
                     raise OutdatedIntent(
+                        event.intent_id,
                         stack.id,
                         f"Outdated intent id ({event.intent_id}) "
                         f"for stack ({stack.id})"
@@ -97,6 +98,7 @@ class IntentMiddleware(BaseMiddleware):
             else:
                 if event.intent_id is not None and event.intent_id != stack.last_intent_id():
                     raise OutdatedIntent(
+                        event.intent_id,
                         stack.id,
                         f"Outdated intent id ({event.intent_id}) "
                         f"for stack ({stack.id})"
