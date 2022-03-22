@@ -260,7 +260,7 @@ class ManagerImpl(DialogManager):
 
     async def process_window_removing(self):
         try:
-            _window = await self.dialog()._current_window(self)
+            _window = await self._dialog()._current_window(self)
         except RuntimeError:
             return
 
