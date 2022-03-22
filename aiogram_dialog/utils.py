@@ -8,7 +8,7 @@ from aiogram.types import (
 )
 from aiogram.utils.exceptions import (
     MessageNotModified, MessageCantBeEdited, MessageToEditNotFound,
-    MessageToDeleteNotFound, MessageCantBeDeleted,
+    MessageToDeleteNotFound, MessageCantBeDeleted, MessageIdentifierNotSpecified
 )
 
 from .context.events import (
@@ -154,6 +154,17 @@ async def remove_kbd(bot: Bot, old_message: Optional[Message]):
         except (MessageNotModified, MessageCantBeEdited,
                 MessageToEditNotFound):
             pass  # nothing to remove
+
+async def remove_message(bot: Bot, message: Optional[Message]):
+    if message:
+        try:
+            await bot.delete_message(
+                message_id=message.message_id, chat_id=message.chat.id
+            )
+            return None
+        except (MessageNotModified, MessageCantBeEdited, MessageToDeleteNotFound,
+                MessageToEditNotFound, MessageCantBeDeleted, MessageIdentifierNotSpecified):
+            return message
 
 
 # Edit

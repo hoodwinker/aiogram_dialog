@@ -46,6 +46,18 @@ class DialogWindowProto(Protocol):
     def get_state(self) -> State:
         raise NotImplementedError
 
+    @property
+    def remove_on_close(self) -> Optional[bool]:
+        raise NotImplementedError
+
+    @property
+    def message_id(self) -> Optional[int]:
+        raise NotImplementedError
+
+    @message_id.setter
+    def message_id(self, value):
+        raise NotImplementedError
+
     def find(self, widget_id) -> Optional[Actionable]:
         raise NotImplementedError
 
@@ -129,6 +141,7 @@ class Dialog(ManagedDialogProto):
             )
         stack = manager.current_stack()
         message = await manager.show(new_message)
+        window.message_id = message.message_id
         stack.last_message_id = message.message_id
         media_id = get_media_id(message)
         if media_id:
@@ -145,6 +158,8 @@ class Dialog(ManagedDialogProto):
                 type=new_message.media.type,
                 media_id=get_media_id(message),
             )
+        if new_message.force_new:
+            await manager.process_window_removing()
 
     async def _message_handler(self, m: Message, dialog_manager: DialogManager):
         intent = dialog_manager.current_context()

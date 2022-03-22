@@ -4,6 +4,7 @@ from .calendar_kbd import Calendar, ManagedCalendarAdapter
 from .checkbox import Checkbox, ManagedCheckboxAdapter
 from .group import Group, Row, Column
 from .scrolling_group import ScrollingGroup, ManagedScrollingGroupAdapter
+from .scrolling_message import ScrollingMessage
 from .select import (
     Select, Radio, Multiselect, ManagedMultiSelectAdapter, ManagedRadioAdapter,
 )
@@ -17,6 +18,7 @@ __all__ = [
     "Back", "Cancel", "Next", "Start", "SwitchTo",
     "Group", "Row", "Column",
     "ScrollingGroup", "ManagedScrollingGroupAdapter",
+    "ScrollingMessage",
     "Checkbox", "ManagedCheckboxAdapter",
     "Select", "Radio", "Multiselect",
     "ManagedMultiSelectAdapter", "ManagedRadioAdapter",

@@ -17,7 +17,7 @@ from ..context.intent_filter import CONTEXT_KEY, STORAGE_KEY, STACK_KEY
 from ..context.stack import Stack, DEFAULT_STACK_ID
 from ..context.storage import StorageProxy
 from ..exceptions import IncorrectBackgroundError
-from ..utils import get_chat, remove_kbd, show_message
+from ..utils import get_chat, remove_kbd, show_message, remove_message
 
 logger = getLogger(__name__)
 
@@ -69,6 +69,7 @@ class ManagerImpl(DialogManager):
         chat = get_chat(self.event)
         message = Message(chat=chat,
                           message_id=self.current_stack().last_message_id)
+        await self.process_window_removing()
         await remove_kbd(self.event.bot, message)
         self.current_stack().last_message_id = None
 
@@ -256,3 +257,16 @@ class ManagerImpl(DialogManager):
         del self._registry
         del self.event
         del self.data
+
+    async def process_window_removing(self):
+        try:
+            _window = await self.dialog()._current_window(self)
+        except RuntimeError:
+            return
+
+        if not all((_window.remove_on_close, _window.message_id)):
+            return
+
+        window_message = Message(message_id=_window.message_id,
+                                 chat=get_chat(self.event))
+        return await remove_message(self.event.bot, window_message)

@@ -12,7 +12,7 @@ from aiogram.types.base import TelegramObject
 from .context import Context
 from .events import DialogUpdateEvent
 from .storage import StorageProxy
-from ..exceptions import InvalidStackIdError, OutdatedIntent
+from ..exceptions import InvalidStackIdError, OutdatedIntent, InvalidIntentIdError, OutdatedIntentError
 from ..utils import remove_indent_id, get_chat
 
 STORAGE_KEY = "aiogd_storage_proxy"
@@ -53,7 +53,7 @@ class IntentMiddleware(BaseMiddleware):
         chat = get_chat(event)
         proxy = StorageProxy(
             storage=self.storage,
-            user_id=event.from_user.id,
+            user_id=chat.id,
             chat_id=chat.id,
             state_groups=self.state_groups,
         )
@@ -76,7 +76,7 @@ class IntentMiddleware(BaseMiddleware):
         chat = get_chat(event)
         proxy = StorageProxy(
             storage=self.storage,
-            user_id=event.from_user.id,
+            user_id=chat.id,
             chat_id=chat.id,
             state_groups=self.state_groups,
         )
@@ -114,7 +114,7 @@ class IntentMiddleware(BaseMiddleware):
         chat = get_chat(event)
         proxy = StorageProxy(
             storage=self.storage,
-            user_id=event.from_user.id,
+            user_id=chat.id,
             chat_id=chat.id,
             state_groups=self.state_groups,
         )
@@ -125,11 +125,15 @@ class IntentMiddleware(BaseMiddleware):
         if intent_id:
             context = await proxy.load_context(intent_id)
             stack = await proxy.load_stack(context.stack_id)
-            if stack.last_intent_id() != intent_id:
-                raise OutdatedIntent(
-                    stack.id,
-                    f"Outdated intent id ({intent_id}) for stack ({stack.id})"
-                )
+            try:
+                last_intent_id = stack.last_intent_id()
+            except IndexError as e:
+                raise InvalidIntentIdError("Intents list is empty")
+
+            if last_intent_id != intent_id:
+                raise OutdatedIntent("Outdated intent id (%s) for stack ('%s')",
+                                     intent_id, stack.id)
+
             event.data = callback_data
         else:
             stack = await proxy.load_stack()

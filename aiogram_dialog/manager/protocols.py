@@ -239,3 +239,6 @@ class DialogManager(BaseDialogManager):
 class ManagedWidgetProto(Protocol):
     def managed(self, manager: DialogManager) -> Any:
         pass
+
+    async def process_window_removing(self) -> None:
+        pass
