@@ -89,6 +89,10 @@ def intent_callback_data(intent_id: str,
 def add_indent_id(message: NewMessage, intent_id: str):
     if not message.reply_markup:
         return
+    
+    if not hasattr(message.reply_markup, "inline_keyboard"):
+        return
+    
     for row in message.reply_markup.inline_keyboard:
         for button in row:
             button.callback_data = intent_callback_data(

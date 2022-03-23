@@ -139,9 +139,9 @@ class Dialog(ManagedDialogProto):
                 url=new_message.media.url,
                 type=new_message.media.type,
             )
-        stack = manager.current_stack()
         if new_message.force_new:
             await manager.process_window_removing()
+        stack = manager.current_stack()
         message = await manager.show(new_message)
         window.message_id = message.message_id
         stack.last_message_id = message.message_id
