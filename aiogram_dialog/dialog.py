@@ -140,6 +140,8 @@ class Dialog(ManagedDialogProto):
                 type=new_message.media.type,
             )
         stack = manager.current_stack()
+        if new_message.force_new:
+            await manager.process_window_removing()
         message = await manager.show(new_message)
         window.message_id = message.message_id
         stack.last_message_id = message.message_id
@@ -158,8 +160,6 @@ class Dialog(ManagedDialogProto):
                 type=new_message.media.type,
                 media_id=get_media_id(message),
             )
-        if new_message.force_new:
-            await manager.process_window_removing()
 
     async def _message_handler(self, m: Message, dialog_manager: DialogManager):
         intent = dialog_manager.current_context()
