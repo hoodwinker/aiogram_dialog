@@ -10,7 +10,7 @@ from .context.events import Data
 from .exceptions import UnregisteredWindowError
 from .manager.protocols import (
     DialogRegistryProto, ManagedDialogProto, DialogManager, NewMessage,
-    LaunchMode,
+    LaunchMode, Owner,
 )
 from .utils import add_indent_id, get_media_id
 from .widgets.action import Actionable
