@@ -1,15 +1,22 @@
 import asyncio
 import logging
+import os.path
+from typing import Any
 
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import StatesGroup, State
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ContentType
 
 from aiogram_dialog import Dialog, DialogManager, DialogRegistry, Window, ChatEvent, StartMode
+from aiogram_dialog.manager.protocols import ManagedDialogAdapterProto
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button, Select, Row, SwitchTo, Back
+from aiogram_dialog.widgets.media import StaticMedia
 from aiogram_dialog.widgets.text import Const, Format, Multi
+
+
+src_dir = os.path.normpath(os.path.join(__file__, os.path.pardir))
 
 API_TOKEN = "PLACE YOUR TOKEN HERE"
 
@@ -29,25 +36,37 @@ async def get_data(dialog_manager: DialogManager, **kwargs):
     }
 
 
-async def name_handler(m: Message, dialog: Dialog, manager: DialogManager):
+async def name_handler(m: Message, dialog: ManagedDialogAdapterProto,
+                       manager: DialogManager):
+    if manager.is_preview():
+        await dialog.next()
+        return
     manager.current_context().dialog_data["name"] = m.text
     await m.answer(f"Nice to meet you, {m.text}")
-    await dialog.next(manager)
+    await dialog.next()
 
 
 async def on_finish(c: CallbackQuery, button: Button, manager: DialogManager):
+    if manager.is_preview():
+        await manager.done()
+        return
     await c.message.answer("Thank you. To start again click /start")
     await manager.done()
 
 
-async def on_age_changed(c: ChatEvent, select: Select, manager: DialogManager, item_id: str):
+async def on_age_changed(c: ChatEvent, select: Any, manager: DialogManager,
+                         item_id: str):
     manager.current_context().dialog_data["age"] = item_id
-    await manager.dialog().next(manager)
+    await manager.dialog().next()
 
 
 dialog = Dialog(
     Window(
         Const("Greetings! Please, introduce yourself:"),
+        StaticMedia(
+            path=os.path.join(src_dir, "python_logo.png"),
+            type=ContentType.PHOTO,
+        ),
         MessageInput(name_handler),
         state=DialogSG.greeting,
     ),
@@ -62,6 +81,7 @@ dialog = Dialog(
         ),
         state=DialogSG.age,
         getter=get_data,
+        preview_data={"name": "Tishka17"}
     ),
     Window(
         Multi(

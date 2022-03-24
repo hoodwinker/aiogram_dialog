@@ -1,20 +1,20 @@
-from dataclasses import dataclass
 from logging import getLogger
 from typing import Optional, Tuple, Union, IO
 
 from aiogram import Bot
 from aiogram.types import (
-    Message, CallbackQuery, Chat, ParseMode,
-    InlineKeyboardMarkup, ChatMemberUpdated, ContentType, InputMedia,
+    Message, CallbackQuery, Chat, ChatMemberUpdated, ContentType, InputMedia,
+    User,
 )
 from aiogram.utils.exceptions import (
     MessageNotModified, MessageCantBeEdited, MessageToEditNotFound,
-    MessageToDeleteNotFound, MessageCantBeDeleted, MessageIdentifierNotSpecified,
+    MessageToDeleteNotFound, MessageCantBeDeleted, MessageIdentifierNotSpecified
 )
 
 from .context.events import (
     DialogUpdateEvent, ChatEvent
 )
+from .manager.protocols import MediaAttachment, NewMessage, ShowMode, MediaId
 
 logger = getLogger(__name__)
 
@@ -38,52 +38,41 @@ def get_chat(event: ChatEvent) -> Chat:
         return event.message.chat
 
 
-def get_media_id(message: Message) -> Optional[str]:
-    if message.audio:
-        return message.audio.file_id
-    if message.animation:
-        return message.animation.file_id
-    if message.document:
-        return message.document.file_id
-    if message.photo:
-        return message.photo[-1].file_id
-    if message.video:
-        return message.video.file_id
-    return None
+def is_chat_loaded(chat: Chat) -> bool:
+    """
+    Checks if chat is correctly loaded from telegram.
+    Otherwise, it is created with no data inside as a FakeChat
+    """
+    return getattr(chat, "fake", False)
 
 
-class MediaAttachment:
-    def __init__(
-            self,
-            type: ContentType,
-            url: Optional[str] = None,
-            path: Optional[str] = None,
-            file_id: Optional[str] = None,
-            **kwargs,
-    ):
-        if not (url or path or file_id):
-            raise ValueError("Neither url nor path not file_id are provided")
-        self.type = type
-        self.url = url
-        self.path = path
-        self.file_id = file_id
-        self.kwargs = kwargs
+def is_user_loaded(user: User) -> bool:
+    """
+    Checks if chat is correctly loaded from telegram.
+    Otherwise, it is created with no data inside as a FakeUser
+    """
+    return getattr(user, "fake", False)
 
 
-@dataclass
-class NewMessage:
-    chat: Chat
-    text: Optional[str] = None
-    reply_markup: Optional[InlineKeyboardMarkup] = None
-    parse_mode: Optional[ParseMode] = None
-    force_new: bool = False
-    disable_web_page_preview: Optional[bool] = None
-    media: Optional[MediaAttachment] = None
+def get_media_id(message: Message) -> Optional[MediaId]:
+    media = (
+        message.audio or
+        message.animation or
+        message.document or
+        (message.photo[-1] if message.photo else None) or
+        message.video
+    )
+    if not media:
+        return None
+    return MediaId(
+        file_id=media.file_id,
+        file_unique_id=media.file_unique_id,
+    )
 
 
 async def get_media_source(media: MediaAttachment) -> Union[IO, str]:
     if media.file_id:
-        return media.file_id
+        return media.file_id.file_id
     if media.url:
         return media.url
     else:
@@ -100,6 +89,10 @@ def intent_callback_data(intent_id: str,
 def add_indent_id(message: NewMessage, intent_id: str):
     if not message.reply_markup:
         return
+    
+    if not hasattr(message.reply_markup, "inline_keyboard"):
+        return
+    
     for row in message.reply_markup.inline_keyboard:
         for button in row:
             button.callback_data = intent_callback_data(
@@ -115,8 +108,10 @@ def remove_indent_id(callback_data: str) -> Tuple[str, str]:
 
 
 async def show_message(bot: Bot, new_message: NewMessage,
-                       old_message: Message):
-    if not old_message or new_message.force_new:
+                       old_message: Optional[Message]):
+    if not old_message or new_message.show_mode is ShowMode.SEND:
+        logger.debug("Send new message, because: mode=%s, has old_message=%s",
+                     new_message.show_mode, bool(old_message))
         await remove_kbd(bot, old_message)
         return await send_message(bot, new_message)
 
@@ -163,6 +158,17 @@ async def remove_kbd(bot: Bot, old_message: Optional[Message]):
         except (MessageNotModified, MessageCantBeEdited,
                 MessageToEditNotFound):
             pass  # nothing to remove
+
+async def remove_message(bot: Bot, message: Optional[Message]):
+    if message:
+        try:
+            await bot.delete_message(
+                message_id=message.message_id, chat_id=message.chat.id
+            )
+            return None
+        except (MessageNotModified, MessageCantBeEdited, MessageToDeleteNotFound,
+                MessageToEditNotFound, MessageCantBeDeleted, MessageIdentifierNotSpecified):
+            return message
 
 
 # Edit
@@ -211,26 +217,15 @@ async def edit_media(bot: Bot, new_message: NewMessage,
         parse_mode=new_message.parse_mode,
         disable_web_page_preview=new_message.disable_web_page_preview,
         media=await get_media_source(new_message.media),
+        type=new_message.media.type,
         **new_message.media.kwargs,
     )
     return await bot.edit_message_media(
         message_id=old_message.message_id,
         chat_id=old_message.chat.id,
         media=media,
+        reply_markup=new_message.reply_markup,
     )
-
-
-
-async def remove_message(bot: Bot, message: Optional[Message]):
-    if message:
-        try:
-            await bot.delete_message(
-                message_id=message.message_id, chat_id=message.chat.id
-            )
-            return None
-        except (MessageNotModified, MessageCantBeEdited, MessageToDeleteNotFound,
-                MessageToEditNotFound, MessageCantBeDeleted, MessageIdentifierNotSpecified):
-            return message
 
 
 # Send

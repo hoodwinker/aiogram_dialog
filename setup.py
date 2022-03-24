@@ -26,6 +26,7 @@ setup(
         'aiogram>=2.12,<3',
         'jinja2',
         'cachetools==4.*',
+        'magic_filter',
     ],
     extras_require={
         "tools": [
@@ -34,6 +35,7 @@ setup(
     },
     package_data={
         'aiogram_dialog.tools': ['calculator.png'],
+        'aiogram_dialog.tools.templates': ['message.html'],
     },
-    python_requires=">=3.7",
+    python_requires=">=3.8",
 )

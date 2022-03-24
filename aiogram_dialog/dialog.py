@@ -7,14 +7,16 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, Message, CallbackQuery, ContentTypes
 
 from .context.events import Data
-from .context.media_storage import MediaIdStorage
-from .manager.protocols import DialogRegistryProto, ManagedDialogProto, DialogManager
-from .utils import NewMessage, show_message, add_indent_id, get_chat, get_media_id, media_storage
+from .exceptions import UnregisteredWindowError
+from .manager.protocols import (
+    DialogRegistryProto, ManagedDialogProto, DialogManager, NewMessage,
+    LaunchMode,
+)
+from .utils import add_indent_id, get_media_id
 from .widgets.action import Actionable
 
 logger = getLogger(__name__)
 DIALOG_CONTEXT = "DIALOG_CONTEXT"
-DataGetter = Callable[..., Awaitable[Dict]]
 
 ChatEvent = Union[CallbackQuery, Message]
 OnDialogEvent = Callable[[Any, DialogManager], Awaitable]
@@ -38,7 +40,7 @@ class DialogWindowProto(Protocol):
     async def process_callback(self, c: CallbackQuery, dialog: "Dialog", manager: DialogManager):
         raise NotImplementedError
 
-    async def render(self, dialog: "Dialog", manager: DialogManager, preview: bool = False) -> NewMessage:
+    async def render(self, dialog: "Dialog", manager: DialogManager) -> NewMessage:
         raise NotImplementedError
 
     def get_state(self) -> State:
@@ -67,6 +69,7 @@ class Dialog(ManagedDialogProto):
             on_start: Optional[OnDialogEvent] = None,
             on_close: Optional[OnDialogEvent] = None,
             on_process_result: Optional[OnResultEvent] = None,
+            launch_mode: LaunchMode = LaunchMode.STANDARD,
     ):
         self._states_group = windows[0].get_state().group
         self.states: List[State] = []
@@ -81,6 +84,7 @@ class Dialog(ManagedDialogProto):
         self.on_start = on_start
         self.on_close = on_close
         self.on_process_result = on_process_result
+        self.launch_mode = launch_mode
 
     async def next(self, manager: DialogManager):
         if not manager.current_context():
@@ -109,13 +113,19 @@ class Dialog(ManagedDialogProto):
     async def switch_to(self, state: State, manager: DialogManager):
         if state.group != self.states_group():
             raise ValueError(
-                "Cannot switch from %s to another states group %s" %
-                (state.group, self.states_group())
+                f"Cannot switch from `{self.states_group_name()}` "
+                f"to another states group {state.group}"
             )
         await manager.switch_to(state)
 
     async def _current_window(self, manager: DialogManager) -> DialogWindowProto:
-        return self.windows[manager.current_context().state]
+        try:
+            return self.windows[manager.current_context().state]
+        except ValueError as e:
+            raise UnregisteredWindowError(
+                f"No window found for `{manager.current_context().state}` "
+                f"Current state group is `{self.states_group_name()}`"
+            ) from e
 
     async def show(self, manager: DialogManager) -> None:
         logger.debug("Dialog show (%s)", self)
@@ -123,38 +133,33 @@ class Dialog(ManagedDialogProto):
         new_message = await window.render(self, manager)
         add_indent_id(new_message, manager.current_context().id)
         media_id_storage = manager.registry.media_id_storage
-        if new_message.media:
+        if new_message.media and not new_message.media.file_id:
             new_message.media.file_id = await media_id_storage.get_media_id(
-                new_message.media.path, new_message.media.type,
+                path=new_message.media.path,
+                url=new_message.media.url,
+                type=new_message.media.type,
             )
-        message = await self._show(new_message, manager)
-        manager.current_stack().last_message_id = message.message_id
-        manager.current_stack().last_media_id = get_media_id(message)
+        if new_message.force_new:
+            await manager.process_window_removing()
+        stack = manager.current_stack()
+        message = await manager.show(new_message)
+        window.message_id = message.message_id
+        stack.last_message_id = message.message_id
+        media_id = get_media_id(message)
+        if media_id:
+            stack.last_media_id = media_id.file_id
+            stack.last_media_unique_id = media_id.file_unique_id
+        else:
+            stack.last_media_id = None
+            stack.last_media_unique_id = None
+
         if new_message.media:
             await media_id_storage.save_media_id(
-                new_message.media.path, new_message.media.type, get_media_id(message)
+                path=new_message.media.path,
+                url=new_message.media.url,
+                type=new_message.media.type,
+                media_id=get_media_id(message),
             )
-        window.message_id = message.message_id
-
-    async def _show(self, new_message: NewMessage, manager: DialogManager):
-        stack = manager.current_stack()
-        event = manager.event
-        if (
-                isinstance(event, CallbackQuery)
-                and event.message
-                and stack.last_message_id == event.message.message_id
-        ):
-            old_message = event.message
-        else:
-            if stack and stack.last_message_id:
-                old_message = Message(message_id=stack.last_message_id,
-                                      chat=get_chat(event))
-            else:
-                old_message = None
-
-        if not old_message or new_message.force_new:
-            await manager.process_window_removing()
-        return await show_message(event.bot, new_message, old_message)
 
     async def _message_handler(self, m: Message, dialog_manager: DialogManager):
         intent = dialog_manager.current_context()
@@ -169,7 +174,8 @@ class Dialog(ManagedDialogProto):
         await window.process_callback(c, self, dialog_manager)
         if dialog_manager.current_context() == intent:  # no new dialog started
             await self.show(dialog_manager)
-        await c.answer()
+        if not dialog_manager.is_preview():
+            await c.answer()
 
     async def _update_handler(self, event: ChatEvent, dialog_manager: DialogManager):
         await self.show(dialog_manager)
