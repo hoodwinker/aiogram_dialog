@@ -3,7 +3,7 @@ from typing import Dict, Optional, List, Union
 
 from aiogram.dispatcher.filters.state import State
 from aiogram.types import (
-    InlineKeyboardMarkup, Message, CallbackQuery, ParseMode, ForceReply
+    InlineKeyboardMarkup, Message, CallbackQuery, ParseMode, ForceReply as ForceReplyMarkup
 )
 
 from .dialog import Dialog, DialogWindowProto
@@ -28,7 +28,6 @@ class Window(DialogWindowProto):
                  disable_web_page_preview: Optional[bool] = None,
                  preview_add_transitions: Optional[List[Keyboard]] = None,
                  preview_data: GetterVariant = None,
-                 force_reply_placeholder: Optional[Union[str, bool]] = None,
                  remove_on_close: Optional[bool] = None,
                  input_removing: Optional[bool] = None,
                  ):
@@ -44,7 +43,6 @@ class Window(DialogWindowProto):
         self.disable_web_page_preview = disable_web_page_preview
         self.preview_add_transitions = preview_add_transitions
         self.preview_data = preview_data
-        self.force_reply_placeholder = force_reply_placeholder
         self._remove_on_close = remove_on_close
         self._input_removing = input_removing
         self._message_id = None
@@ -60,8 +58,10 @@ class Window(DialogWindowProto):
             return await self.media.render_media(data, manager)
 
     async def render_kbd(self, data: Dict,
-                         manager: DialogManager) -> InlineKeyboardMarkup:
+                         manager: DialogManager) -> Union[InlineKeyboardMarkup, ForceReplyMarkup]:
         keyboard = await self.keyboard.render_keyboard(data, manager)
+        if isinstance(keyboard, ForceReplyMarkup):
+            return keyboard
         return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
     async def load_data(self, dialog: "Dialog",
@@ -85,19 +85,11 @@ class Window(DialogWindowProto):
         current_data = await self.load_data(dialog, manager)
         reply_markup = await self.render_kbd(current_data, manager)
 
-        if self.force_reply_placeholder is not None and self.force_reply_placeholder is not True:
-            if reply_markup.inline_keyboard:
-                raise RuntimeError("Cannot use force reply and keyboard simultaneously")
-            else:
-                if self.force_reply_placeholder is True:
-                    reply_markup = ForceReply()
-                else:
-                    reply_markup = ForceReply(input_field_placeholder=self.force_reply_placeholder)
-
         force_new = any((
             all((isinstance(manager.event, Message), not self._input_removing)),
-            self.force_reply_placeholder
+            isinstance(reply_markup, ForceReplyMarkup)
         ))
+
         return NewMessage(
             chat=get_chat(manager.event),
             text=await self.render_text(current_data, manager),
