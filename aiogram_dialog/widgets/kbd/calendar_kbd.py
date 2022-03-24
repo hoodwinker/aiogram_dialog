@@ -15,6 +15,7 @@ from aiogram_dialog.manager.protocols import DialogManager
 from aiogram_dialog.widgets.widget_event import WidgetEventProcessor, ensure_event_processor
 from .base import Keyboard
 from ..managed import ManagedWidgetAdapter
+from ..text import Text
 from ...deprecation_utils import manager_deprecated
 
 OnDateSelected = Callable[[ChatEvent, "ManagedCalendarAdapter", DialogManager, date], Awaitable]
@@ -46,14 +47,16 @@ class Calendar(Keyboard, ABC):
                  id: str,
                  on_click: Union[OnDateSelected, WidgetEventProcessor, None] = None,
                  when: Union[str, Callable] = None,
-                 locale='en_US'):
+                 locale: Text = Text('en_US')):
         super().__init__(id, when)
-        self.locale = locale
+        self._locale = locale
+        self.locale = None
         self.on_click = ensure_event_processor(on_click)
 
     async def _render_keyboard(self,
                                data,
                                manager: DialogManager) -> List[List[InlineKeyboardButton]]:
+        self.locale = self._locale.render_text(data, manager)
         offset = self.get_offset(manager)
         current_scope = self.get_scope(manager)
 
