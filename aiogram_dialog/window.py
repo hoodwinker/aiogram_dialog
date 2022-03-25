@@ -1,3 +1,4 @@
+import itertools
 from logging import getLogger
 from typing import Dict, Optional, List, Union
 
@@ -60,8 +61,10 @@ class Window(DialogWindowProto):
     async def render_kbd(self, data: Dict,
                          manager: DialogManager) -> Union[InlineKeyboardMarkup, ForceReplyMarkup]:
         keyboard = await self.keyboard.render_keyboard(data, manager)
-        if isinstance(keyboard, ForceReplyMarkup):
-            return keyboard
+
+        first = next(itertools.chain.from_iterable(keyboard))
+        if isinstance(first, ForceReplyMarkup):
+            return first
         return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
     async def load_data(self, dialog: "Dialog",
