@@ -8,7 +8,7 @@ from aiogram.types import (
 )
 
 from .dialog import Dialog, DialogWindowProto
-from .manager.protocols import DialogManager
+from .manager.protocols import DialogManager, ShowMode
 from .utils import get_chat, NewMessage, MediaAttachment, remove_message
 from .widgets.action import Actionable
 from .widgets.data import PreviewAwareGetter
@@ -98,7 +98,7 @@ class Window(DialogWindowProto):
             text=await self.render_text(current_data, manager),
             reply_markup=reply_markup,
             parse_mode=self.parse_mode,
-            force_new=force_new,
+            show_mode=ShowMode.SEND if force_new else ShowMode.AUTO,
             disable_web_page_preview=self.disable_web_page_preview,
             media=await self.render_media(current_data, manager),
         )
