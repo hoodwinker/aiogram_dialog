@@ -5,6 +5,7 @@ from typing import Protocol
 from aiogram import Dispatcher
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, Message, CallbackQuery, ContentTypes
+from aiogram_dialog import ShowMode
 
 from .context.events import Data
 from .exceptions import UnregisteredWindowError
@@ -139,7 +140,7 @@ class Dialog(ManagedDialogProto):
                 url=new_message.media.url,
                 type=new_message.media.type,
             )
-        if new_message.force_new:
+        if new_message.show_mode == ShowMode.SEND:
             await manager.process_window_removing()
         stack = manager.current_stack()
         message = await manager.show(new_message)
