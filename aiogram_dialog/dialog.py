@@ -5,13 +5,12 @@ from typing import Protocol
 from aiogram import Dispatcher
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, Message, CallbackQuery, ContentTypes
-from aiogram_dialog import ShowMode
 
 from .context.events import Data
 from .exceptions import UnregisteredWindowError
 from .manager.protocols import (
     DialogRegistryProto, ManagedDialogProto, DialogManager, NewMessage,
-    LaunchMode,
+    LaunchMode, ShowMode
 )
 from .utils import add_indent_id, get_media_id
 from .widgets.action import Actionable
