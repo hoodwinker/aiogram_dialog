@@ -22,11 +22,9 @@ class ForceReply(Keyboard):
     async def process_callback(self, c: CallbackQuery, dialog: Dialog, manager: DialogManager) -> bool:
         return False
 
-    async def _render_keyboard(self, data: Dict, manager: DialogManager) -> List[List[ForceReplyMarkup]]:
+    async def _render_keyboard(self, data: Dict, manager: DialogManager) -> ForceReplyMarkup:
 
-        return [[
-            ForceReplyMarkup(
+        return ForceReplyMarkup(
                 input_field_placeholder=await self.text.render_text(data, manager),
                 callback_data=self.widget_id,
                 selective=self.selective)
-        ]]
