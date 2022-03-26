@@ -86,8 +86,16 @@ class Window(DialogWindowProto):
         current_data = await self.load_data(dialog, manager)
         reply_markup = await self.render_kbd(current_data, manager)
 
+        message_is_last = True
+        if isinstance(manager.event, Message):
+            if manager.current_stack().last_message_id is not None:
+                if manager.current_stack().last_message_id < manager.event.message_id:
+                    message_is_last = False
+            else:
+                message_is_last = False
+
         force_new = any((
-            all((isinstance(manager.event, Message), not self._input_removing)),
+            all((isinstance(manager.event, Message), not self._input_removing, not message_is_last)),
             isinstance(reply_markup, ForceReplyMarkup)
         ))
 
