@@ -1,21 +1,20 @@
 from abc import ABC
-from babel.dates import format_date
-
-from aiogram.utils import emoji
 from calendar import monthcalendar
 from datetime import date, timedelta
 from time import mktime
 from typing import List, Callable, Union, Awaitable, TypedDict, Optional
 
 from aiogram.types import InlineKeyboardButton, CallbackQuery
+from aiogram.utils import emoji
+from babel.dates import format_date
 
 from aiogram_dialog.context.events import ChatEvent
 from aiogram_dialog.dialog import Dialog
 from aiogram_dialog.manager.protocols import DialogManager
+from aiogram_dialog.widgets.text import Format
 from aiogram_dialog.widgets.widget_event import WidgetEventProcessor, ensure_event_processor
 from .base import Keyboard
 from ..managed import ManagedWidgetAdapter
-from ..text import Text
 from ...deprecation_utils import manager_deprecated
 
 OnDateSelected = Callable[[ChatEvent, "ManagedCalendarAdapter", DialogManager, date], Awaitable]
@@ -47,7 +46,7 @@ class Calendar(Keyboard, ABC):
                  id: str,
                  on_click: Union[OnDateSelected, WidgetEventProcessor, None] = None,
                  when: Union[str, Callable] = None,
-                 locale: Text = Text('en_US')):
+                 locale: Format = Format('en_US')):
         super().__init__(id, when)
         self._locale = locale
         self.locale = None
