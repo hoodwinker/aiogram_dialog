@@ -55,7 +55,7 @@ class Calendar(Keyboard, ABC):
     async def _render_keyboard(self,
                                data,
                                manager: DialogManager) -> List[List[InlineKeyboardButton]]:
-        self.locale = self._locale.render_text(data, manager)
+        self.locale = await self._locale.render_text(data, manager)
         offset = self.get_offset(manager)
         current_scope = self.get_scope(manager)
 
