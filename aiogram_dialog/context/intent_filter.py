@@ -183,7 +183,10 @@ class IntentMiddleware(BaseMiddleware):
         if stack.empty():
             context = None
         else:
-            context = await proxy.load_context(stack.last_intent_id())
+            try:
+                context = await proxy.load_context(stack.last_intent_id())
+            except:
+                context = None
         data[STACK_KEY] = stack
         data[CONTEXT_KEY] = context
 
