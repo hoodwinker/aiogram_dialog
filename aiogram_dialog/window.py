@@ -74,7 +74,15 @@ class Window(DialogWindowProto):
         if self.on_message:
             await self.on_message.process_message(message, dialog, manager)
         if self._input_removing:
-            await remove_message(manager.event.bot, message)
+            message_is_last = True
+            if manager.current_stack().last_message_id is not None:
+                if manager.current_stack().last_message_id < message.message_id:
+                    message_is_last = False
+            else:
+                message_is_last = False
+
+            if not message_is_last:
+                await remove_message(manager.event.bot, message)
 
     async def process_callback(self, c: CallbackQuery, dialog: Dialog,
                                manager: DialogManager):
