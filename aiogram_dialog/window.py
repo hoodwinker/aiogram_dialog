@@ -74,14 +74,14 @@ class Window(DialogWindowProto):
         if self.on_message:
             await self.on_message.process_message(message, dialog, manager)
         if self._input_removing:
-            message_is_last = True
+            event_message_is_last = True
             if manager.current_stack().last_message_id is not None:
-                if manager.current_stack().last_message_id < message.message_id:
-                    message_is_last = False
+                if message.message_id > manager.current_stack().last_message_id:
+                    event_message_is_last = False
             else:
-                message_is_last = False
+                event_message_is_last = False
 
-            if not message_is_last:
+            if event_message_is_last:
                 await remove_message(manager.event.bot, message)
 
     async def process_callback(self, c: CallbackQuery, dialog: Dialog,
@@ -104,7 +104,8 @@ class Window(DialogWindowProto):
 
         force_new = any((
             all((isinstance(manager.event, Message), not self._input_removing, not message_is_last)),
-            isinstance(reply_markup, ForceReplyMarkup)
+            isinstance(reply_markup, ForceReplyMarkup),
+            manager.show_mode is ShowMode.SEND
         ))
 
         return NewMessage(
@@ -112,7 +113,7 @@ class Window(DialogWindowProto):
             text=await self.render_text(current_data, manager),
             reply_markup=reply_markup,
             parse_mode=self.parse_mode,
-            show_mode=ShowMode.SEND if force_new else ShowMode.AUTO,
+            show_mode=ShowMode.SEND if force_new else ShowMode.EDIT,
             disable_web_page_preview=self.disable_web_page_preview,
             media=await self.render_media(current_data, manager),
         )
