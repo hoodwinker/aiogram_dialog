@@ -3,7 +3,7 @@ from typing import Optional, Tuple, Union, IO
 
 from aiogram import Bot
 from aiogram.types import (
-    Message, CallbackQuery, Chat, ChatMemberUpdated, ContentType, InputMedia,
+    Message, CallbackQuery, Chat, ChatMemberUpdated, ContentType, InputMedia, ChatJoinRequest,
     User,
 )
 from aiogram.utils.exceptions import (
@@ -30,7 +30,7 @@ send_methods = {
 
 
 def get_chat(event: ChatEvent) -> Chat:
-    if isinstance(event, (Message, DialogUpdateEvent, ChatMemberUpdated)):
+    if isinstance(event, (Message, DialogUpdateEvent, ChatMemberUpdated, ChatJoinRequest)):
         return event.chat
     elif isinstance(event, CallbackQuery):
         if not event.message:
