@@ -79,6 +79,10 @@ class ManagedDialogProto(Protocol):
                             state: Optional[State] = None) -> None:
         pass
 
+    async def process_post_start(self, manager: "DialogManager", start_data: Any,
+                                 state: Optional[State] = None) -> None:
+        pass
+
     async def show(self, manager: "DialogManager"):
         pass
 

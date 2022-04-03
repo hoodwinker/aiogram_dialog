@@ -67,6 +67,7 @@ class Dialog(ManagedDialogProto):
             self,
             *windows: DialogWindowProto,
             on_start: Optional[OnDialogEvent] = None,
+            on_post_start: Optional[OnDialogEvent] = None,
             on_close: Optional[OnDialogEvent] = None,
             on_process_result: Optional[OnResultEvent] = None,
             launch_mode: LaunchMode = LaunchMode.STANDARD,
@@ -82,6 +83,7 @@ class Dialog(ManagedDialogProto):
             self.states.append(state)
         self.windows: Dict[State, DialogWindowProto] = dict(zip(self.states, windows))
         self.on_start = on_start
+        self.on_post_start = on_post_start
         self.on_close = on_close
         self.on_process_result = on_process_result
         self.launch_mode = launch_mode
@@ -105,6 +107,10 @@ class Dialog(ManagedDialogProto):
         logger.debug("Dialog start: %s (%s)", state, self)
         await self.switch_to(state, manager)
         await self._process_callback(self.on_start, start_data, manager)
+
+    async def process_post_start(self, manager: DialogManager, start_data: Any,
+                                 state: Optional[State] = None) -> None:
+        await self._process_callback(self.on_post_start, start_data, manager)
 
     async def _process_callback(self, callback: Optional[OnDialogEvent], *args, **kwargs):
         if callback:

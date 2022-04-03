@@ -155,6 +155,7 @@ class ManagerImpl(DialogManager):
         await self._dialog().process_start(self, data, state)
         if context.id == self.current_context().id:
             await self._dialog().show(self)
+        await self._dialog().process_post_start(self, data, state)
 
     async def switch_to(self, state: State) -> None:
         self.check_disabled()
