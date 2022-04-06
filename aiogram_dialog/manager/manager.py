@@ -214,6 +214,12 @@ class ManagerImpl(DialogManager):
                 return ShowMode.SEND
         return ShowMode.EDIT
 
+    def get_data(self) -> Dict:
+        return self.current_context().dialog_data
+
+    def update_data(self, data: Dict) -> None:
+        self.current_context().dialog_data.update(data)
+
     async def update(self, data: Dict) -> None:
         self.current_context().dialog_data.update(data)
         await self._dialog().show(self)

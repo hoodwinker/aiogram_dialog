@@ -200,6 +200,12 @@ class BaseDialogManager(Protocol):
     async def switch_to(self, state: State) -> None:
         pass
 
+    async def get_data(self) -> Dict:
+        pass
+
+    async def update_data(self, data: Dict) -> None:
+        pass
+
     async def update(self, data: Dict) -> None:
         pass
 
