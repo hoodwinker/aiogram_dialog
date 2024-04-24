@@ -4,14 +4,14 @@ from datetime import date, timedelta
 from time import mktime
 from typing import List, Callable, Union, Awaitable, TypedDict, Optional
 
+import emoji
 from aiogram.types import InlineKeyboardButton, CallbackQuery
-from aiogram.utils import emoji
 from babel.dates import format_date
 
 from aiogram_dialog.context.events import ChatEvent
 from aiogram_dialog.dialog import Dialog
 from aiogram_dialog.manager.protocols import DialogManager
-from aiogram_dialog.widgets.text import Format
+from aiogram_dialog.widgets.text import Text, Const
 from aiogram_dialog.widgets.widget_event import WidgetEventProcessor, ensure_event_processor
 from .base import Keyboard
 from ..managed import ManagedWidgetAdapter
@@ -46,25 +46,24 @@ class Calendar(Keyboard, ABC):
                  id: str,
                  on_click: Union[OnDateSelected, WidgetEventProcessor, None] = None,
                  when: Union[str, Callable] = None,
-                 locale: Format = Format('en_US')):
+                 locale: Text = Const('en_US')):
         super().__init__(id, when)
         self._locale = locale
-        self.locale = None
         self.on_click = ensure_event_processor(on_click)
 
     async def _render_keyboard(self,
                                data,
                                manager: DialogManager) -> List[List[InlineKeyboardButton]]:
-        self.locale = await self._locale.render_text(data, manager)
-        offset = self.get_offset(manager)
+        locale = await self._locale.render_text(data, manager)
         current_scope = self.get_scope(manager)
+        offset = self.get_offset(manager)
 
         if current_scope == SCOPE_DAYS:
-            return self.days_kbd(offset)
+            return self.days_kbd(offset, locale)
         elif current_scope == SCOPE_MONTHS:
-            return self.months_kbd(offset)
+            return self.months_kbd(offset, locale)
         elif current_scope == SCOPE_YEARS:
-            return self.years_kbd(offset)
+            return self.years_kbd(offset, locale)
 
     async def process_callback(self,
                                c: CallbackQuery,
@@ -115,7 +114,7 @@ class Calendar(Keyboard, ABC):
             )
         return True
 
-    def years_kbd(self, offset) -> List[List[InlineKeyboardButton]]:
+    def years_kbd(self, offset, locale) -> List[List[InlineKeyboardButton]]:
         years = []
         for n in range(offset.year - 7, offset.year + 7, 3):
             year_row = []
@@ -125,13 +124,13 @@ class Calendar(Keyboard, ABC):
             years.append(year_row)
         return years
 
-    def months_kbd(self, offset) -> List[List[InlineKeyboardButton]]:
+    def months_kbd(self, offset, locale) -> List[List[InlineKeyboardButton]]:
         header_year = format_date(offset, "Y")
         months = []
         for n in MONTHS_NUMBERS:
             season = []
             for month in n:
-                month_text = format_date(date(offset.year, month, 1), "MMM Y", locale=self.locale)
+                month_text = format_date(date(offset.year, month, 1), "MMM Y", locale=locale)
                 season.append(InlineKeyboardButton(text=month_text,
                                                    callback_data=f"{self.widget_id}:{PREFIX_MONTH}{month}"))
             months.append(season)
@@ -143,9 +142,9 @@ class Calendar(Keyboard, ABC):
             *months
         ]
 
-    def days_kbd(self, offset) -> List[List[InlineKeyboardButton]]:
-        header_week = format_date(offset, "MMM Y", locale=self.locale)
-        day_names = (format_date(PIVOT_MONDAY + timedelta(x), "E", locale=self.locale) for x in range(7))
+    def days_kbd(self, offset, locale) -> List[List[InlineKeyboardButton]]:
+        header_week = format_date(offset, "MMM Y", locale=locale)
+        day_names = (format_date(PIVOT_MONDAY + timedelta(x), "E", locale=locale) for x in range(7))
         weekheader = [InlineKeyboardButton(text=day_name, callback_data=" ")
                       for day_name in day_names]
         days = []

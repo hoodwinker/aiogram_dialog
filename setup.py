@@ -28,6 +28,7 @@ setup(
         'cachetools==4.*',
         'jinja2',
         'magic_filter',
+        'emoji',
     ],
     extras_require={
         "tools": [
